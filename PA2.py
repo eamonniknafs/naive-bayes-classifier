@@ -27,7 +27,6 @@ def likelihood(df):
 	#alpha = 1
 	#ham_alpha_count = 0
 	#spam_alpha_count = 0
-	#count the number of times each word appears in each email
 	ham_word_count = {}
 	spam_word_count = {}
 	
@@ -102,6 +101,7 @@ def predict(ham_prior, spam_prior, ham_like_dict, spam_like_dict, text):
 		if i in ham_like_dict:
 			ham_posterior *= (ham_like_dict[i] + alpha)
 	ham_posterior *= ham_prior
+	ham_posterior /= spam_prior
 
 	#spam_posterior = posterior probability that the email is spam
 	spam_posterior = 1
@@ -109,6 +109,7 @@ def predict(ham_prior, spam_prior, ham_like_dict, spam_like_dict, text):
 		if i in spam_like_dict:
 			spam_posterior *= (spam_like_dict[i] + alpha)
 	spam_posterior *= spam_prior
+	spam_posterior /= ham_prior
 
 	if ham_posterior > spam_posterior:
 		ham_spam_decision = 0
