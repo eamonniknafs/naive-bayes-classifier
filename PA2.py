@@ -21,7 +21,27 @@ def likelihood(df):
 	ham_like_dict = {}
 	spam_like_dict = {}
 	'''YOUR CODE HERE'''
+	#create a dictionary of words and their probability for each class
+	#ham_like_dict = {'word': probability}
+	ham_mail = df.loc[df['label'] == 'ham', 'text'].values
+	for i in range(len(ham_mail)):
+		for word in ham_mail[i].split():
+			if word in ham_like_dict:
+				ham_like_dict[word] += 1
+			else:
+				ham_like_dict[word] = 1
+	ham_like_dict = {k: v/df['label'].value_counts()[1]
+                  for k, v in ham_like_dict.items()}
 
+	#spam_like_dict = {'word': probability}
+	spam_mail = df.loc[df['label'] == 'spam', 'text'].values
+	for i in range(len(spam_mail)):
+		for word in spam_mail[i].split():
+			if word in spam_like_dict:
+				spam_like_dict[word] += 1
+			else:
+				spam_like_dict[word] = 1
+	spam_like_dict = {k: v/df['label'].value_counts()[0] for k, v in spam_like_dict.items()}
 	'''END'''
 
 	return ham_like_dict, spam_like_dict
@@ -78,3 +98,4 @@ if __name__ == "__main__":
 	#this cell is for your own testing of the functions above
 	df = load('TRAIN_balanced_ham_spam.csv')
 	ham_prior, spam_prior = prior(df)
+	ham_like_dict, spam_like_dict = likelihood(df)
