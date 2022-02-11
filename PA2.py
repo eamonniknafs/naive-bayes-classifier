@@ -1,3 +1,5 @@
+import math
+import random
 import pandas as pd
 
 def load(path):
@@ -21,27 +23,30 @@ def likelihood(df):
 	ham_like_dict = {}
 	spam_like_dict = {}
 	'''YOUR CODE HERE'''
+	ham_words = {}
+	spam_words = {}
 	#create a dictionary of words and their probability for each class
 	#ham_like_dict = {'word': probability}
 	ham_mail = df.loc[df['label'] == 'ham', 'text'].values
 	for i in range(len(ham_mail)):
 		for word in ham_mail[i].split():
-			if word in ham_like_dict:
-				ham_like_dict[word] += 1
+			if word in ham_words:
+				ham_words[word] += 1
 			else:
-				ham_like_dict[word] = 1
+				ham_words[word] = 1
 	ham_like_dict = {k: v/df['label'].value_counts()[1]
-                  for k, v in ham_like_dict.items()}
+                  for k, v in ham_words.items()}
 
 	#spam_like_dict = {'word': probability}
 	spam_mail = df.loc[df['label'] == 'spam', 'text'].values
 	for i in range(len(spam_mail)):
 		for word in spam_mail[i].split():
-			if word in spam_like_dict:
-				spam_like_dict[word] += 1
+			if word in spam_words:
+				spam_words[word] += 1
 			else:
-				spam_like_dict[word] = 1
-	spam_like_dict = {k: v/df['label'].value_counts()[0] for k, v in spam_like_dict.items()}
+				spam_words[word] = 1
+	spam_like_dict = {k: v/df['label'].value_counts()[0]
+                   for k, v in spam_words.items()}
 	'''END'''
 
 	return ham_like_dict, spam_like_dict
@@ -55,10 +60,21 @@ def predict(ham_prior, spam_prior, ham_like_dict, spam_like_dict, text):
 
 	'''YOUR CODE HERE'''
 	#ham_posterior = posterior probability that the email is normal/ham
-	ham_posterior = None
+	ham_posterior = 0.0
+	for i in text.split():
+		if i in ham_like_dict:
+			ham_posterior += ham_like_dict[i]
 
 	#spam_posterior = posterior probability that the email is spam
-	spam_posterior = None
+	spam_posterior = 0.0
+	for i in text.split():
+		if i in spam_like_dict:
+			spam_posterior += spam_like_dict[i]
+
+	if spam_posterior > ham_posterior:
+		ham_spam_decision = 1
+	else:
+		ham_spam_decision = 0
 
 	'''END'''
 	return ham_spam_decision
@@ -97,5 +113,14 @@ if __name__ == "__main__":
 	'''YOUR CODE HERE'''
 	#this cell is for your own testing of the functions above
 	df = load('TRAIN_balanced_ham_spam.csv')
+	df_test = load('TEST_balanced_ham_spam.csv')
 	ham_prior, spam_prior = prior(df)
 	ham_like_dict, spam_like_dict = likelihood(df)
+	# spam = df_test.loc[df_test['label'] == 'spam',
+    #                      'text'].values
+	# spam_test = spam[random.randint(0, len(spam)-1)]
+	# ham = df_test.loc[df_test['label'] == 'ham', 'text'].values[0]
+	# ham_test = ham[random.randint(0, len(ham)-1)]
+	# print(predict(ham_prior, spam_prior, ham_like_dict, spam_like_dict, spam_test))
+	# print(predict(ham_prior, spam_prior, ham_like_dict, spam_like_dict, ham_test))
+	print(metrics(ham_prior, spam_prior, ham_like_dict, spam_like_dict, df_test))
