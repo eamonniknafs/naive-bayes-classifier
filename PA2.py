@@ -1,4 +1,5 @@
 import math
+import numpy as np
 import random
 import pandas as pd
 
@@ -23,30 +24,65 @@ def likelihood(df):
 	ham_like_dict = {}
 	spam_like_dict = {}
 	'''YOUR CODE HERE'''
-	ham_words = {}
-	spam_words = {}
-	#create a dictionary of words and their probability for each class
-	#ham_like_dict = {'word': probability}
+	#alpha = 1
+	#ham_alpha_count = 0
+	#spam_alpha_count = 0
+	#count the number of times each word appears in each email
+	ham_word_count = {}
+	spam_word_count = {}
+	
+	#create a list of all text from ham emails
 	ham_mail = df.loc[df['label'] == 'ham', 'text'].values
-	for i in range(len(ham_mail)):
-		for word in ham_mail[i].split():
-			if word in ham_words:
-				ham_words[word] += 1
+	
+	#iterate through each word in each email, counting the number of emails that contain a given word
+	for mail in ham_mail:
+		words = []
+		for word in mail.split():
+			if word not in words:
+				words.append(word)
+		for word in words:
+			if word not in ham_word_count:
+				ham_word_count[word] = 1 #+ alpha
+				#ham_alpha_count += 1
 			else:
-				ham_words[word] = 1
-	ham_like_dict = {k: v/df['label'].value_counts()[1]
-                  for k, v in ham_words.items()}
+				ham_word_count[word] += 1
+			
+			# if word not in spam_word_count:
+			# 	spam_word_count[word] = alpha
+			# 	spam_alpha_count += 1
 
-	#spam_like_dict = {'word': probability}
+	#create a list of all text from spam emails
 	spam_mail = df.loc[df['label'] == 'spam', 'text'].values
-	for i in range(len(spam_mail)):
-		for word in spam_mail[i].split():
-			if word in spam_words:
-				spam_words[word] += 1
+
+	#iterate through each word in each email, counting the number of emails that contain a given word
+	for mail in spam_mail:
+		words = []
+		for word in mail.split():
+			if word not in words:
+				words.append(word)
+		for word in words:
+			if word not in spam_word_count:
+				spam_word_count[word] = 1 #+ alpha
+				# spam_alpha_count += 1
 			else:
-				spam_words[word] = 1
-	spam_like_dict = {k: v/df['label'].value_counts()[0]
-                   for k, v in spam_words.items()}
+				spam_word_count[word] += 1
+
+			# if word not in ham_word_count:
+			# 	ham_word_count[word] = alpha
+			# 	ham_alpha_count += 1
+		
+	#calculate the likelihood of each word in the 'ham' class
+	ham_like_dict = {k: v/(df['label'].value_counts()[1])
+                  for k, v in ham_word_count.items()}
+	# ham_like_dict = {k: v/(df['label'].value_counts()[1] + ham_alpha_count)
+    #               for k, v in ham_word_count.items()}
+
+
+	#calculate the likelihood of each word in the 'spam' class
+	spam_like_dict = {k: v/(df['label'].value_counts()[0])
+				  for k, v in spam_word_count.items()}
+	# spam_like_dict = {k: v/(df['label'].value_counts()[0] + spam_alpha_count)
+    #                for k, v in spam_word_count.items()}
 	'''END'''
 
 	return ham_like_dict, spam_like_dict
@@ -59,22 +95,25 @@ def predict(ham_prior, spam_prior, ham_like_dict, spam_like_dict, text):
 	ham_spam_decision = None
 
 	'''YOUR CODE HERE'''
+	alpha = 2
 	#ham_posterior = posterior probability that the email is normal/ham
-	ham_posterior = 0.0
+	ham_posterior = 1
 	for i in text.split():
 		if i in ham_like_dict:
-			ham_posterior += ham_like_dict[i]
+			ham_posterior *= (ham_like_dict[i] + alpha)
+	ham_posterior *= ham_prior
 
 	#spam_posterior = posterior probability that the email is spam
-	spam_posterior = 0.0
+	spam_posterior = 1
 	for i in text.split():
 		if i in spam_like_dict:
-			spam_posterior += spam_like_dict[i]
+			spam_posterior *= (spam_like_dict[i] + alpha)
+	spam_posterior *= spam_prior
 
-	if spam_posterior > ham_posterior:
-		ham_spam_decision = 1
-	else:
+	if ham_posterior > spam_posterior:
 		ham_spam_decision = 0
+	else:
+		ham_spam_decision = 1
 
 	'''END'''
 	return ham_spam_decision
