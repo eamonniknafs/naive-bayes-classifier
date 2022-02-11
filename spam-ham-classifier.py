@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 
 def load(path):
@@ -92,22 +91,24 @@ def predict(ham_prior, spam_prior, ham_like_dict, spam_like_dict, text):
 	ham_spam_decision = None
 
 	'''YOUR CODE HERE'''
-	alpha = 2
-	#ham_posterior = posterior probability that the email is normal/ham
-	ham_posterior = 1
+	alpha = 1.4
+	p_words_ham = 1.0
+	p_words_spam = 1.0
+
 	for i in text.split():
 		if i in ham_like_dict:
-			ham_posterior *= (ham_like_dict[i] + alpha)
-	ham_posterior *= ham_prior
-	ham_posterior /= spam_prior
+			p_words_ham *= (ham_like_dict[i] + alpha)
 
-	#spam_posterior = posterior probability that the email is spam
-	spam_posterior = 1
 	for i in text.split():
 		if i in spam_like_dict:
-			spam_posterior *= (spam_like_dict[i] + alpha)
-	spam_posterior *= spam_prior
-	spam_posterior /= ham_prior
+			p_words_spam *= (spam_like_dict[i] + alpha)
+	
+	#ham_posterior = posterior probability that the email is normal/ham
+	ham_posterior = (ham_prior * p_words_ham)/(ham_prior * p_words_ham + spam_prior * p_words_spam)
+	
+
+	#spam_posterior = posterior probability that the email is spam
+	spam_posterior = (spam_prior * p_words_spam)/(ham_prior * p_words_ham + spam_prior * p_words_spam)
 
 	if ham_posterior > spam_posterior:
 		ham_spam_decision = 0
